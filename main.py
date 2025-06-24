@@ -14,6 +14,8 @@ except ImportError:
     print("Numpy not found. Please run:\npip install numpy\n to install numpy")
     exit()
 
+import dm3_lib as dm3
+
 from packaging import version
 
 
