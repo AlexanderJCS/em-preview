@@ -16,12 +16,7 @@ except ImportError:
 
 import dm3_lib as dm3
 
-from packaging import version
-
-
-if version.parse(cv2.__version__) < version.parse("3.4"):
-    raise RuntimeError("OpenCV version 3.4 or higher is required for stitching. Please update OpenCV.")
-
+# TODO: Check OpenCV version >= 3.4
 
 def stitch_images(image_paths, output_path='panorama.jpg'):
     # Load all images
@@ -85,6 +80,10 @@ def stitch_images(image_paths, output_path='panorama.jpg'):
 
 
 def main():
+    dm3f = dm3.DM3("input/1/Montage acquisition -- OnPoint BSED.dm3")
+    print(dm3f.imagedata.shape)
+    exit()
+
     start = time.perf_counter()
 
     directory = Path("input")
