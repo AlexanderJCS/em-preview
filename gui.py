@@ -38,21 +38,30 @@ def do_stitching():
         threshold       = float(threshold_var.get())
         downscaling     = float(downscaling_var.get())
         output_file     = output_file_var.get()
+        contrast        = float(contrast_var.get())
 
-        success = stitch_images(
+        result = stitch_images(
             image_paths=list(input_files),
             output_path=output_file,
             threshold=threshold,
-            downscaling=downscaling
+            downscaling=downscaling,
+            contrast=contrast
         )
 
         # back on the main thread: re-enable button and show result
         def on_done():
             run_button.config(state=tk.NORMAL)
-            if success:
+            if result == 0:
                 messagebox.showinfo("Success", f"Stitched image saved to:\n{output_file}")
             else:
-                messagebox.showerror("Error", "Stitching failed.")
+                msg = f"Stitching failed with status code: {result}"
+                if result == 1:
+                    msg = "Stitching failed: Not enough overlap"
+                elif result == 2:
+                    msg = "Stitching failed: Could not compute perspective transform"
+                elif result == 3:
+                    msg = "Stitching failed: Not camera setting failed"
+                messagebox.showerror("Error", msg)
         root.after(0, on_done)
 
     except Exception as e:
@@ -84,6 +93,7 @@ root.minsize(800, 500)
 # Variables
 threshold_var    = tk.StringVar(value="0.5")
 downscaling_var  = tk.StringVar(value="8")
+contrast_var     = tk.StringVar(value="2.0")
 output_file_var  = tk.StringVar()
 
 # Layout
@@ -97,18 +107,21 @@ ttk.Button(btn_frame, text="Add Files…",    command=add_input_files).grid(row=
 ttk.Button(btn_frame, text="Remove Files…", command=remove_selected_files).grid(row=0, column=1, padx=(0,5))
 ttk.Button(btn_frame, text="Clear List",    command=clear_input_files).grid(row=0, column=2)
 
-ttk.Label(root, text="Threshold:").grid(row=2, column=0, sticky="e", padx=10, pady=10)
+ttk.Label(root, text="Confidence:").grid(row=2, column=0, sticky="e", padx=10, pady=10)
 ttk.Entry(root, textvariable=threshold_var).grid(row=2, column=1, sticky="we", padx=10)
 
 ttk.Label(root, text="Downscaling:").grid(row=3, column=0, sticky="e", padx=10, pady=10)
 ttk.Entry(root, textvariable=downscaling_var).grid(row=3, column=1, sticky="we", padx=10)
 
-ttk.Label(root, text="Output File:").grid(row=4, column=0, sticky="e", padx=10, pady=10)
-ttk.Entry(root, textvariable=output_file_var, width=60).grid(row=4, column=1, padx=10, pady=10, sticky="we")
-ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=4, column=2, padx=10)
+ttk.Label(root, text="Contrast (lower=higher contrast):").grid(row=4, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=contrast_var).grid(row=4, column=1, sticky="we", padx=10)
+
+ttk.Label(root, text="Output File:").grid(row=5, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=output_file_var, width=60).grid(row=5, column=1, padx=10, pady=10, sticky="we")
+ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=5, column=2, padx=10)
 
 run_button = ttk.Button(root, text="Run Stitching", command=start_stitching)
-run_button.grid(row=5, column=1, pady=20)
+run_button.grid(row=6, column=1, pady=20)
 
 # Make the listbox expand with the window
 root.columnconfigure(1, weight=1)
