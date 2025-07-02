@@ -2,9 +2,6 @@ from pathlib import Path
 import time
 import sys
 
-from matplotlib import pyplot as plt
-from sklearn.mixture import GaussianMixture
-
 
 try:
     import cv2
@@ -93,15 +90,15 @@ def stitch_images(image_paths, output_path='panorama.jpg', threshold=0.5, downsc
     lower_clip = mean - contrast * std
     upper_clip = mean + contrast * std
 
-    for i, img in enumerate(images):
-        hist, bins = np.histogram(img[:, :, 0], bins=100)
-        plt.plot(bins[:-1], hist, label=f'Histogram {i + 1}')
-    plt.xlabel('Pixel Intensity')
-    plt.ylabel('Frequency')
-    plt.axvline(float(lower_clip), color='r', linestyle='--', label='Lower Cutoff')
-    plt.axvline(float(upper_clip), color='g', linestyle='--', label='Upper Cutoff')
-    plt.legend()
-    plt.show()
+    # for i, img in enumerate(images):
+    #     hist, bins = np.histogram(img[:, :, 0], bins=100)
+    #     plt.plot(bins[:-1], hist, label=f'Histogram {i + 1}')
+    # plt.xlabel('Pixel Intensity')
+    # plt.ylabel('Frequency')
+    # plt.axvline(float(lower_clip), color='r', linestyle='--', label='Lower Cutoff')
+    # plt.axvline(float(upper_clip), color='g', linestyle='--', label='Upper Cutoff')
+    # plt.legend()
+    # plt.show()
 
     # Normalize images to the same range
     for i, img in enumerate(images):
