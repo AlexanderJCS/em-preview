@@ -5,7 +5,7 @@ import threading
 import os
 
 # Import stitch_images from stitch.py
-from stitch import stitch_images
+from stitch import load_and_stitch
 
 def add_input_files():
     file_paths = filedialog.askopenfilenames(
@@ -40,7 +40,7 @@ def do_stitching():
         output_file     = output_file_var.get()
         contrast        = float(contrast_var.get())
 
-        result = stitch_images(
+        result = load_and_stitch(
             image_paths=list(input_files),
             output_path=output_file,
             threshold=threshold,
