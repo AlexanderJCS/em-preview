@@ -576,12 +576,13 @@ class DM3(object):
             print("-- %s Tags read --" % len(self._storedTags))
 
         # fetch image characteristics
-        tag_root = 'root.ImageList.1'
-        self._data_type = int(self.tags["%s.ImageData.DataType" % tag_root])
-        self._im_width = int(self.tags["%s.ImageData.Dimensions.0" % tag_root])
-        self._im_height = int(self.tags["%s.ImageData.Dimensions.1" % tag_root])
+        self.tag_root = "root.ImageList.1" if "root.ImageList.1.ImageData.DataType" in self.tags else "root.ImageList.0"
+
+        self._data_type = int(self.tags["%s.ImageData.DataType" % self.tag_root])
+        self._im_width = int(self.tags["%s.ImageData.Dimensions.0" % self.tag_root])
+        self._im_height = int(self.tags["%s.ImageData.Dimensions.1" % self.tag_root])
         try:
-            self._im_depth = int(self.tags['root.ImageList.1.ImageData.Dimensions.2'])
+            self._im_depth = int(self.tags['%s.ImageData.Dimensions.2' % self.tag_root])
         except KeyError:
             self._im_depth = 1
 
@@ -666,7 +667,7 @@ class DM3(object):
     def info(self):
         """Extracts useful experiment info from DM3 file."""
         # define useful information
-        tag_root = 'root.ImageList.1.ImageTags'
+        tag_root = '%s.ImageTags' % self.tag_root
         info_ = {
             'gms_v': "GMS Version.Created",
             'gms_v_': "GMS Version.Saved",
@@ -716,9 +717,8 @@ class DM3(object):
         }
 
         # get relevant Tags
-        tag_root = 'root.ImageList.1'
-        data_offset = int(self.tags["%s.ImageData.Data.Offset" % tag_root])
-        data_size = int(self.tags["%s.ImageData.Data.Size" % tag_root])
+        data_offset = int(self.tags["%s.ImageData.Data.Offset" % self.tag_root])
+        data_size = int(self.tags["%s.ImageData.Data.Size" % self.tag_root])
         data_type = self._data_type
         im_width = self._im_width
         im_height = self._im_height
@@ -828,11 +828,10 @@ class DM3(object):
     @property
     def pxsize(self):
         """Returns pixel size and unit."""
-        tag_root = 'root.ImageList.1'
         pixel_size = float(
-            self.tags["%s.ImageData.Calibrations.Dimension.0.Scale" % tag_root])
+            self.tags["%s.ImageData.Calibrations.Dimension.0.Scale" % self.tag_root])
         unit = self.tags["%s.ImageData.Calibrations.Dimension.0.Units" %
-                         tag_root]
+                         self.tag_root]
         if unit == u'\xb5m':
             unit = 'micron'
         else:
