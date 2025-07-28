@@ -1,7 +1,6 @@
 from pathlib import Path
 import time
 import sys
-import matplotlib.pyplot as plt
 from datetime import datetime
 
 try:
@@ -51,7 +50,6 @@ def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, orig
         # Normalize to 0-255
         img = ((img - lower_clip) / (upper_clip - lower_clip) * 255).astype(np.uint8)
         images[i] = img
-        plt.imshow(images[i], cmap='gray')
 
     # Save normalized downscaled images if output directory is specified
     if downscaled_output_dir and original_paths:
