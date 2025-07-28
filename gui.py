@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox
 from tkinter import ttk
 import threading
 import os
+from pathlib import Path
 
 # Import stitch_images from stitch.py
 from stitch import load_and_stitch
@@ -12,9 +13,36 @@ def add_input_files():
         title="Select Input Images",
         filetypes=[("Image files", "*.dm3 *.png *.jpg *.jpeg *.tif *.tiff *.bmp"), ("All files", "*.*")]
     )
+
+    all_files_to_add = []
+
     for p in file_paths:
-        if p not in input_listbox.get(0, tk.END):
-            input_listbox.insert(tk.END, p)
+        all_files_to_add.append(p)
+
+        # If "add similar files" is checked, look for files with same name in sibling directories
+        if add_similar_var.get():
+            path = Path(p)
+            filename = path.name
+            parent_dir = path.parent
+            grandparent_dir = parent_dir.parent
+
+            # Check if we can go up a directory
+            if grandparent_dir.exists() and grandparent_dir != parent_dir:
+                # Find all sibling directories
+                for sibling_dir in grandparent_dir.iterdir():
+                    if (sibling_dir.is_dir() and
+                        sibling_dir != parent_dir and
+                        sibling_dir.name != parent_dir.name):
+
+                        # Look for file with same name in sibling directory (not recursive)
+                        potential_file = sibling_dir / filename
+                        if potential_file.exists() and potential_file.is_file():
+                            all_files_to_add.append(str(potential_file))
+
+    # Add all files to listbox (avoiding duplicates)
+    for file_path in all_files_to_add:
+        if file_path not in input_listbox.get(0, tk.END):
+            input_listbox.insert(tk.END, file_path)
 
 def remove_selected_files():
     for idx in reversed(input_listbox.curselection()):
@@ -95,6 +123,7 @@ threshold_var    = tk.StringVar(value="0.5")
 downscaling_var  = tk.StringVar(value="8")
 contrast_var     = tk.StringVar(value="2.0")
 output_file_var  = tk.StringVar()
+add_similar_var  = tk.BooleanVar(value=False)
 
 # Layout
 ttk.Label(root, text="Input Images:").grid(row=0, column=0, sticky="nw", padx=10, pady=10)
@@ -107,21 +136,24 @@ ttk.Button(btn_frame, text="Add Files…",    command=add_input_files).grid(row=
 ttk.Button(btn_frame, text="Remove Files…", command=remove_selected_files).grid(row=0, column=1, padx=(0,5))
 ttk.Button(btn_frame, text="Clear List",    command=clear_input_files).grid(row=0, column=2)
 
-ttk.Label(root, text="Confidence:").grid(row=2, column=0, sticky="e", padx=10, pady=10)
-ttk.Entry(root, textvariable=threshold_var).grid(row=2, column=1, sticky="we", padx=10)
+# Checkbox for adding similar files (above Confidence row)
+ttk.Checkbutton(root, text="Add similar files", variable=add_similar_var).grid(row=2, column=0, columnspan=3, sticky="w", padx=10, pady=5)
 
-ttk.Label(root, text="Downscaling:").grid(row=3, column=0, sticky="e", padx=10, pady=10)
-ttk.Entry(root, textvariable=downscaling_var).grid(row=3, column=1, sticky="we", padx=10)
+ttk.Label(root, text="Confidence:").grid(row=3, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=threshold_var).grid(row=3, column=1, sticky="we", padx=10)
 
-ttk.Label(root, text="Contrast (lower=higher contrast):").grid(row=4, column=0, sticky="e", padx=10, pady=10)
-ttk.Entry(root, textvariable=contrast_var).grid(row=4, column=1, sticky="we", padx=10)
+ttk.Label(root, text="Downscaling:").grid(row=4, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=downscaling_var).grid(row=4, column=1, sticky="we", padx=10)
 
-ttk.Label(root, text="Output File:").grid(row=5, column=0, sticky="e", padx=10, pady=10)
-ttk.Entry(root, textvariable=output_file_var, width=60).grid(row=5, column=1, padx=10, pady=10, sticky="we")
-ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=5, column=2, padx=10)
+ttk.Label(root, text="Contrast (lower=higher contrast):").grid(row=5, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=contrast_var).grid(row=5, column=1, sticky="we", padx=10)
+
+ttk.Label(root, text="Output File:").grid(row=6, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=output_file_var, width=60).grid(row=6, column=1, padx=10, pady=10, sticky="we")
+ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=6, column=2, padx=10)
 
 run_button = ttk.Button(root, text="Run Stitching", command=start_stitching)
-run_button.grid(row=6, column=1, pady=20)
+run_button.grid(row=7, column=1, pady=20)
 
 # Make the listbox expand with the window
 root.columnconfigure(1, weight=1)
