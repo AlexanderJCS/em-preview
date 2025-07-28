@@ -161,13 +161,13 @@ ttk.Entry(root, textvariable=downscaling_var).grid(row=4, column=1, sticky="we",
 ttk.Label(root, text="Contrast (lower=higher contrast):").grid(row=5, column=0, sticky="e", padx=10, pady=10)
 ttk.Entry(root, textvariable=contrast_var).grid(row=5, column=1, sticky="we", padx=10)
 
-ttk.Label(root, text="Stitched Output:").grid(row=6, column=0, sticky="e", padx=10, pady=10)
-ttk.Entry(root, textvariable=output_file_var, width=60).grid(row=6, column=1, padx=10, pady=10, sticky="we")
-ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=6, column=2, padx=10)
+ttk.Label(root, text="Downscaled Output:").grid(row=6, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=downscaled_output_var, width=60).grid(row=6, column=1, padx=10, pady=10, sticky="we")
+ttk.Button(root, text="Browse…", command=browse_downscaled_output).grid(row=6, column=2, padx=10)
 
-ttk.Label(root, text="Downscaled Output:").grid(row=7, column=0, sticky="e", padx=10, pady=10)
-ttk.Entry(root, textvariable=downscaled_output_var, width=60).grid(row=7, column=1, padx=10, pady=10, sticky="we")
-ttk.Button(root, text="Browse…", command=browse_downscaled_output).grid(row=7, column=2, padx=10)
+ttk.Label(root, text="Stitched Output:").grid(row=7, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=output_file_var, width=60).grid(row=7, column=1, padx=10, pady=10, sticky="we")
+ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=7, column=2, padx=10)
 
 run_button = ttk.Button(root, text="Run Stitching", command=start_stitching)
 run_button.grid(row=8, column=1, pady=20)
