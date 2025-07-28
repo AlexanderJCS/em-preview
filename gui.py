@@ -53,12 +53,19 @@ def clear_input_files():
 
 def browse_output_file():
     output_file = filedialog.asksaveasfilename(
-        title="Select Output File",
+        title="Select Stitched Output File",
         defaultextension=".jpg",
         filetypes=[("JPEG", "*.jpg"), ("PNG", "*.png"), ("TIFF", "*.tiff"), ("All files", "*.*")]
     )
     if output_file:
         output_file_var.set(output_file)
+
+def browse_downscaled_output():
+    output_dir = filedialog.askdirectory(
+        title="Select Downscaled Output Directory"
+    )
+    if output_dir:
+        downscaled_output_var.set(output_dir)
 
 def do_stitching():
     try:
@@ -66,6 +73,7 @@ def do_stitching():
         threshold       = float(threshold_var.get())
         downscaling     = float(downscaling_var.get())
         output_file     = output_file_var.get()
+        downscaled_output = downscaled_output_var.get()
         contrast        = float(contrast_var.get())
 
         result = load_and_stitch(
@@ -73,14 +81,18 @@ def do_stitching():
             output_path=output_file,
             threshold=threshold,
             downscaling=downscaling,
-            contrast=contrast
+            contrast=contrast,
+            downscaled_output_dir=downscaled_output if downscaled_output else None
         )
 
         # back on the main thread: re-enable button and show result
         def on_done():
             run_button.config(state=tk.NORMAL)
             if result == 0:
-                messagebox.showinfo("Success", f"Stitched image saved to:\n{output_file}")
+                success_msg = f"Stitched image saved to:\n{output_file}"
+                if downscaled_output:
+                    success_msg += f"\n\nDownscaled images saved to downscaled output directory"
+                messagebox.showinfo("Success", success_msg)
             else:
                 msg = f"Stitching failed with status code: {result}"
                 if result == 1:
@@ -123,6 +135,7 @@ threshold_var    = tk.StringVar(value="0.5")
 downscaling_var  = tk.StringVar(value="8")
 contrast_var     = tk.StringVar(value="2.0")
 output_file_var  = tk.StringVar()
+downscaled_output_var = tk.StringVar()
 add_similar_var  = tk.BooleanVar(value=False)
 
 # Layout
@@ -148,12 +161,16 @@ ttk.Entry(root, textvariable=downscaling_var).grid(row=4, column=1, sticky="we",
 ttk.Label(root, text="Contrast (lower=higher contrast):").grid(row=5, column=0, sticky="e", padx=10, pady=10)
 ttk.Entry(root, textvariable=contrast_var).grid(row=5, column=1, sticky="we", padx=10)
 
-ttk.Label(root, text="Output File:").grid(row=6, column=0, sticky="e", padx=10, pady=10)
+ttk.Label(root, text="Stitched Output:").grid(row=6, column=0, sticky="e", padx=10, pady=10)
 ttk.Entry(root, textvariable=output_file_var, width=60).grid(row=6, column=1, padx=10, pady=10, sticky="we")
 ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=6, column=2, padx=10)
 
+ttk.Label(root, text="Downscaled Output:").grid(row=7, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=downscaled_output_var, width=60).grid(row=7, column=1, padx=10, pady=10, sticky="we")
+ttk.Button(root, text="Browse…", command=browse_downscaled_output).grid(row=7, column=2, padx=10)
+
 run_button = ttk.Button(root, text="Run Stitching", command=start_stitching)
-run_button.grid(row=7, column=1, pady=20)
+run_button.grid(row=8, column=1, pady=20)
 
 # Make the listbox expand with the window
 root.columnconfigure(1, weight=1)

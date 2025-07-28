@@ -2,7 +2,7 @@ from pathlib import Path
 import time
 import sys
 import matplotlib.pyplot as plt
-
+from datetime import datetime
 
 try:
     import cv2
@@ -30,7 +30,7 @@ def preprocess_image(image, downscaling=8):
     return downscaled, lower_percentile, upper_percentile
 
 
-def stitch(images, threshold=0.5, contrast=2.0):
+def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, original_paths=None):
     # Construct histogram for the GMM
     values = []
     for img in images:
@@ -53,6 +53,10 @@ def stitch(images, threshold=0.5, contrast=2.0):
         images[i] = img
         plt.imshow(images[i], cmap='gray')
 
+    # Save normalized downscaled images if output directory is specified
+    if downscaled_output_dir and original_paths:
+        save_downscaled_images(images, original_paths, downscaled_output_dir)
+
     stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
     stitcher.setPanoConfidenceThresh(threshold)
 
@@ -60,7 +64,7 @@ def stitch(images, threshold=0.5, contrast=2.0):
     return status, pano
 
 
-def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, downscaling=8, contrast=2.0):
+def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, downscaling=8, contrast=2.0, downscaled_output_dir=None):
     # Load all images
     images = []
 
@@ -91,12 +95,40 @@ def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, down
             downscaled, lower_percentile, upper_percentile = preprocess_image(img, downscaling)
             images.append(downscaled)
 
-    status, pano = stitch(images, threshold=threshold, contrast=contrast)
+    status, pano = stitch(images, threshold=threshold, contrast=contrast, downscaled_output_dir=downscaled_output_dir, original_paths=image_paths)
     if status == cv2.Stitcher_OK:
         print("Stitching completed successfully.")
         cv2.imwrite(output_path, pano)
 
     return status
+
+
+def save_downscaled_images(downscaled_images, original_paths, output_dir):
+    """Save downscaled images to specified directory with timestamp and first file name"""
+    if not downscaled_images or not original_paths:
+        return
+
+    # Get first file name (without extension and path)
+    first_file = Path(original_paths[0]).stem
+
+    # Create timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    # Create directory name
+    dir_name = f"downscaled_{timestamp}_{first_file}"
+    full_output_dir = Path(output_dir) / dir_name
+
+    # Create directory
+    full_output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save each downscaled image
+    for i, img in enumerate(downscaled_images, 1):
+        output_filename = f"downscaled_{i}.jpg"
+        output_path = full_output_dir / output_filename
+        cv2.imwrite(str(output_path), img)
+        print(f"Saved downscaled image: {output_path}")
+
+    print(f"All downscaled images saved to: {full_output_dir}")
 
 
 def main():
