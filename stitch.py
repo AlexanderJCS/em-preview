@@ -96,7 +96,8 @@ def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, down
     status, pano = stitch(images, threshold=threshold, contrast=contrast, downscaled_output_dir=downscaled_output_dir, original_paths=image_paths)
     if status == cv2.Stitcher_OK:
         print("Stitching completed successfully.")
-        cv2.imwrite(output_path, pano)
+        # bitwise_not inverts the image
+        cv2.imwrite(output_path, cv2.bitwise_not(pano))
 
     return status
 
@@ -123,7 +124,8 @@ def save_downscaled_images(downscaled_images, original_paths, output_dir):
     for i, img in enumerate(downscaled_images, 1):
         output_filename = f"downscaled_{i}.jpg"
         output_path = full_output_dir / output_filename
-        cv2.imwrite(str(output_path), img)
+        # bitwise_not inverts the image
+        cv2.imwrite(str(output_path), cv2.bitwise_not(img))
         print(f"Saved downscaled image: {output_path}")
 
     print(f"All downscaled images saved to: {full_output_dir}")
