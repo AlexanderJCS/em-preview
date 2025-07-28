@@ -29,7 +29,7 @@ def preprocess_image(image, downscaling=8):
     return downscaled, lower_percentile, upper_percentile
 
 
-def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, original_paths=None):
+def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, original_paths=None, invert=True):
     # Construct histogram for the GMM
     values = []
     for img in images:
@@ -53,7 +53,7 @@ def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, orig
 
     # Save normalized downscaled images if output directory is specified
     if downscaled_output_dir and original_paths:
-        save_downscaled_images(images, original_paths, downscaled_output_dir)
+        save_downscaled_images(images, original_paths, downscaled_output_dir, invert)
 
     stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
     stitcher.setPanoConfidenceThresh(threshold)
@@ -62,7 +62,7 @@ def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, orig
     return status, pano
 
 
-def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, downscaling=8, contrast=2.0, downscaled_output_dir=None):
+def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, downscaling=8, contrast=2.0, downscaled_output_dir=None, invert=True):
     # Load all images
     images = []
 
@@ -93,16 +93,19 @@ def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, down
             downscaled, lower_percentile, upper_percentile = preprocess_image(img, downscaling)
             images.append(downscaled)
 
-    status, pano = stitch(images, threshold=threshold, contrast=contrast, downscaled_output_dir=downscaled_output_dir, original_paths=image_paths)
+    status, pano = stitch(images, threshold=threshold, contrast=contrast, downscaled_output_dir=downscaled_output_dir, original_paths=image_paths, invert=invert)
     if status == cv2.Stitcher_OK:
         print("Stitching completed successfully.")
-        # bitwise_not inverts the image
-        cv2.imwrite(output_path, cv2.bitwise_not(pano))
+        # Conditionally invert the image based on the invert parameter
+        if invert:
+            cv2.imwrite(output_path, cv2.bitwise_not(pano))
+        else:
+            cv2.imwrite(output_path, pano)
 
     return status
 
 
-def save_downscaled_images(downscaled_images, original_paths, output_dir):
+def save_downscaled_images(downscaled_images, original_paths, output_dir, invert=True):
     """Save downscaled images to specified directory with timestamp and first file name"""
     if not downscaled_images or not original_paths:
         return
@@ -124,8 +127,11 @@ def save_downscaled_images(downscaled_images, original_paths, output_dir):
     for i, img in enumerate(downscaled_images, 1):
         output_filename = f"downscaled_{i}.jpg"
         output_path = full_output_dir / output_filename
-        # bitwise_not inverts the image
-        cv2.imwrite(str(output_path), cv2.bitwise_not(img))
+        # Conditionally invert the image based on the invert parameter
+        if invert:
+            cv2.imwrite(str(output_path), cv2.bitwise_not(img))
+        else:
+            cv2.imwrite(str(output_path), img)
         print(f"Saved downscaled image: {output_path}")
 
     print(f"All downscaled images saved to: {full_output_dir}")
