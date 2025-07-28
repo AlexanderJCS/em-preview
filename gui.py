@@ -137,7 +137,7 @@ ttk.Button(btn_frame, text="Remove Files…", command=remove_selected_files).gri
 ttk.Button(btn_frame, text="Clear List",    command=clear_input_files).grid(row=0, column=2)
 
 # Checkbox for adding similar files (above Confidence row)
-ttk.Checkbutton(root, text="Add similar files", variable=add_similar_var).grid(row=2, column=0, columnspan=3, sticky="w", padx=10, pady=5)
+ttk.Checkbutton(root, text="Add similar files", variable=add_similar_var).grid(row=2, column=1, columnspan=2, sticky="w", padx=10, pady=5)
 
 ttk.Label(root, text="Confidence:").grid(row=3, column=0, sticky="e", padx=10, pady=10)
 ttk.Entry(root, textvariable=threshold_var).grid(row=3, column=1, sticky="we", padx=10)
