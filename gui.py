@@ -136,7 +136,7 @@ downscaling_var  = tk.StringVar(value="8")
 contrast_var     = tk.StringVar(value="2.0")
 output_file_var  = tk.StringVar()
 downscaled_output_var = tk.StringVar()
-add_similar_var  = tk.BooleanVar(value=False)
+add_similar_var  = tk.BooleanVar(value=True)
 
 # Layout
 ttk.Label(root, text="Input Images:").grid(row=0, column=0, sticky="nw", padx=10, pady=10)
