@@ -75,6 +75,7 @@ def do_stitching():
         output_file     = output_file_var.get()
         downscaled_output = downscaled_output_var.get()
         contrast        = float(contrast_var.get())
+        invert          = invert_var.get()
 
         result = load_and_stitch(
             image_paths=list(input_files),
@@ -82,7 +83,8 @@ def do_stitching():
             threshold=threshold,
             downscaling=downscaling,
             contrast=contrast,
-            downscaled_output_dir=downscaled_output if downscaled_output else None
+            downscaled_output_dir=downscaled_output if downscaled_output else None,
+            invert=invert
         )
 
         # back on the main thread: re-enable button and show result
@@ -136,7 +138,8 @@ downscaling_var  = tk.StringVar(value="8")
 contrast_var     = tk.StringVar(value="2.0")
 output_file_var  = tk.StringVar()
 downscaled_output_var = tk.StringVar()
-add_similar_var  = tk.BooleanVar(value=True)
+add_similar_var  = tk.BooleanVar(value=False)
+invert_var       = tk.BooleanVar(value=True)
 
 # Layout
 ttk.Label(root, text="Input Images:").grid(row=0, column=0, sticky="nw", padx=10, pady=10)
@@ -169,8 +172,11 @@ ttk.Label(root, text="Stitched Output:").grid(row=7, column=0, sticky="e", padx=
 ttk.Entry(root, textvariable=output_file_var, width=60).grid(row=7, column=1, padx=10, pady=10, sticky="we")
 ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=7, column=2, padx=10)
 
+# Checkbox for inverting image (above Run Stitching button)
+ttk.Checkbutton(root, text="Invert image", variable=invert_var).grid(row=8, column=1, columnspan=2, sticky="w", padx=10, pady=5)
+
 run_button = ttk.Button(root, text="Run Stitching", command=start_stitching)
-run_button.grid(row=8, column=1, pady=20)
+run_button.grid(row=9, column=1, pady=20)
 
 # Make the listbox expand with the window
 root.columnconfigure(1, weight=1)
