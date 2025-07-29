@@ -157,68 +157,58 @@ def show_preview_grid(images, preview_width):
     num_images = len(images)
     num_rows = (num_images + preview_width - 1) // preview_width  # Ceiling division
 
-    # Create figure with no spacing between subplots
-    fig, axes = plt.subplots(num_rows, preview_width, figsize=(preview_width * 4, num_rows * 4))
-    fig.subplots_adjust(wspace=0, hspace=0)  # Remove gaps between images
+    # Convert all images to the same format and get dimensions
+    processed_images = []
+    for img in images:
+        # Convert to grayscale if it's a 3-channel image with identical channels
+        if len(img.shape) == 3:
+            if np.array_equal(img[:,:,0], img[:,:,1]) and np.array_equal(img[:,:,1], img[:,:,2]):
+                img = img[:,:,0]  # Use single channel
+            else:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    # Handle case where there's only one subplot
-    if num_rows == 1 and preview_width == 1:
-        axes = [axes]
-    elif num_rows == 1:
-        axes = [axes]
-    elif preview_width == 1:
-        axes = [[ax] for ax in axes]
+        # Ensure proper data type
+        if img.dtype != np.uint8:
+            img = img.astype(np.uint8)
+
+        processed_images.append(img)
+
+    # Get the size of the first image to determine grid dimensions
+    if processed_images:
+        img_height, img_width = processed_images[0].shape[:2]
+        is_color = len(processed_images[0].shape) == 3
     else:
-        # Convert to 2D array if needed
-        if len(axes.shape) == 1:
-            axes = axes.reshape(num_rows, preview_width)
+        return
 
-    for i in range(num_rows * preview_width):
+    # Create a large image to hold the grid
+    grid_height = num_rows * img_height
+    grid_width = preview_width * img_width
+
+    if is_color:
+        grid_image = np.zeros((grid_height, grid_width, 3), dtype=np.uint8)
+    else:
+        grid_image = np.zeros((grid_height, grid_width), dtype=np.uint8)
+
+    # Place each image in the grid
+    for i in range(num_images):
         row = i // preview_width
         col = i % preview_width
 
-        if num_rows == 1 and preview_width == 1:
-            ax = axes[0]
-        elif num_rows == 1:
-            ax = axes[col]
-        elif preview_width == 1:
-            ax = axes[row][0]
-        else:
-            ax = axes[row][col]
+        start_row = row * img_height
+        end_row = start_row + img_height
+        start_col = col * img_width
+        end_col = start_col + img_width
 
-        if i < num_images:
-            # Get the image and ensure it's in the right format
-            img = images[i].copy()
+        grid_image[start_row:end_row, start_col:end_col] = processed_images[i]
 
-            # Convert to grayscale if it's a 3-channel image with identical channels
-            if len(img.shape) == 3:
-                # Check if it's actually grayscale (all channels identical)
-                if np.array_equal(img[:,:,0], img[:,:,1]) and np.array_equal(img[:,:,1], img[:,:,2]):
-                    img = img[:,:,0]  # Use single channel
-                else:
-                    # Convert BGR to RGB for matplotlib
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # Display the single grid image
+    fig, ax = plt.subplots(1, 1, figsize=(preview_width * 4, num_rows * 4))
+    ax.imshow(grid_image, cmap='gray' if not is_color else None, vmin=0, vmax=255)
+    ax.axis('off')
 
-            # Ensure proper data type and range
-            if img.dtype != np.uint8:
-                img = img.astype(np.uint8)
-
-            # Display image
-            ax.imshow(img, cmap='gray' if len(img.shape) == 2 else None, vmin=0, vmax=255)
-        # else:
-        #     # Fill empty spaces with black
-        #     if len(images) > 0:
-        #         black_img = np.zeros_like(images[0][:,:,0] if len(images[0].shape) == 3 else images[0])
-        #     else:
-        #         black_img = np.zeros((100, 100))
-        #     ax.imshow(black_img, cmap='gray', vmin=0, vmax=255)
-
-        # Remove all axes decorations
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.axis('off')
-
-    plt.tight_layout(pad=0)  # Remove padding
+    # Remove all padding and margins
+    plt.subplots_adjust(left=0, bottom=0, right=1, top=1)
+    plt.tight_layout(pad=0)
     plt.show()
 
 
