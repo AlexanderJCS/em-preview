@@ -17,6 +17,13 @@ except ImportError:
 
 import dm3_lib as dm3
 
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+except ImportError:
+    print("Matplotlib not found. Preview functionality will be disabled.")
+    plt = None
+
 # TODO: Check OpenCV version >= 3.4
 
 
@@ -29,7 +36,7 @@ def preprocess_image(image, downscaling=8):
     return downscaled, lower_percentile, upper_percentile
 
 
-def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, original_paths=None, invert=True):
+def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, original_paths=None, invert=True, show_preview=False, preview_width=2):
     # Construct histogram for the GMM
     values = []
     for img in images:
@@ -55,6 +62,10 @@ def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, orig
     if downscaled_output_dir and original_paths:
         save_downscaled_images(images, original_paths, downscaled_output_dir, invert)
 
+    # Show preview if requested, after downscaling but before stitching
+    if show_preview and images:
+        show_preview_grid(images, preview_width)
+
     stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
     stitcher.setPanoConfidenceThresh(threshold)
 
@@ -62,7 +73,7 @@ def stitch(images, threshold=0.5, contrast=2.0, downscaled_output_dir=None, orig
     return status, pano
 
 
-def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, downscaling=8, contrast=2.0, downscaled_output_dir=None, invert=True):
+def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, downscaling=8, contrast=2.0, downscaled_output_dir=None, invert=True, show_preview=False, preview_width=2):
     # Load all images
     images = []
 
@@ -93,7 +104,7 @@ def load_and_stitch(image_paths, output_path='panorama.jpg', threshold=0.5, down
             downscaled, lower_percentile, upper_percentile = preprocess_image(img, downscaling)
             images.append(downscaled)
 
-    status, pano = stitch(images, threshold=threshold, contrast=contrast, downscaled_output_dir=downscaled_output_dir, original_paths=image_paths, invert=invert)
+    status, pano = stitch(images, threshold=threshold, contrast=contrast, downscaled_output_dir=downscaled_output_dir, original_paths=image_paths, invert=invert, show_preview=show_preview, preview_width=preview_width)
     if status == cv2.Stitcher_OK:
         print("Stitching completed successfully.")
         # Conditionally invert the image based on the invert parameter
@@ -135,6 +146,80 @@ def save_downscaled_images(downscaled_images, original_paths, output_dir, invert
         print(f"Saved downscaled image: {output_path}")
 
     print(f"All downscaled images saved to: {full_output_dir}")
+
+
+def show_preview_grid(images, preview_width):
+    """Display images in a grid using matplotlib with no gaps or text"""
+    if plt is None:
+        print("Matplotlib not available, skipping preview")
+        return
+
+    num_images = len(images)
+    num_rows = (num_images + preview_width - 1) // preview_width  # Ceiling division
+
+    # Create figure with no spacing between subplots
+    fig, axes = plt.subplots(num_rows, preview_width, figsize=(preview_width * 4, num_rows * 4))
+    fig.subplots_adjust(wspace=0, hspace=0)  # Remove gaps between images
+
+    # Handle case where there's only one subplot
+    if num_rows == 1 and preview_width == 1:
+        axes = [axes]
+    elif num_rows == 1:
+        axes = [axes]
+    elif preview_width == 1:
+        axes = [[ax] for ax in axes]
+    else:
+        # Convert to 2D array if needed
+        if len(axes.shape) == 1:
+            axes = axes.reshape(num_rows, preview_width)
+
+    for i in range(num_rows * preview_width):
+        row = i // preview_width
+        col = i % preview_width
+
+        if num_rows == 1 and preview_width == 1:
+            ax = axes[0]
+        elif num_rows == 1:
+            ax = axes[col]
+        elif preview_width == 1:
+            ax = axes[row][0]
+        else:
+            ax = axes[row][col]
+
+        if i < num_images:
+            # Get the image and ensure it's in the right format
+            img = images[i].copy()
+
+            # Convert to grayscale if it's a 3-channel image with identical channels
+            if len(img.shape) == 3:
+                # Check if it's actually grayscale (all channels identical)
+                if np.array_equal(img[:,:,0], img[:,:,1]) and np.array_equal(img[:,:,1], img[:,:,2]):
+                    img = img[:,:,0]  # Use single channel
+                else:
+                    # Convert BGR to RGB for matplotlib
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+            # Ensure proper data type and range
+            if img.dtype != np.uint8:
+                img = img.astype(np.uint8)
+
+            # Display image
+            ax.imshow(img, cmap='gray' if len(img.shape) == 2 else None, vmin=0, vmax=255)
+        # else:
+        #     # Fill empty spaces with black
+        #     if len(images) > 0:
+        #         black_img = np.zeros_like(images[0][:,:,0] if len(images[0].shape) == 3 else images[0])
+        #     else:
+        #         black_img = np.zeros((100, 100))
+        #     ax.imshow(black_img, cmap='gray', vmin=0, vmax=255)
+
+        # Remove all axes decorations
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.axis('off')
+
+    plt.tight_layout(pad=0)  # Remove padding
+    plt.show()
 
 
 def main():

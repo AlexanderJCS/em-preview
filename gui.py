@@ -84,7 +84,9 @@ def do_stitching():
             downscaling=downscaling,
             contrast=contrast,
             downscaled_output_dir=downscaled_output if downscaled_output else None,
-            invert=invert
+            invert=invert,
+            show_preview=show_preview_var.get(),
+            preview_width=int(preview_width_var.get()) if preview_width_var.get().isdigit() else 2
         )
 
         # back on the main thread: re-enable button and show result
@@ -140,6 +142,8 @@ output_file_var  = tk.StringVar()
 downscaled_output_var = tk.StringVar()
 add_similar_var  = tk.BooleanVar(value=True)
 invert_var       = tk.BooleanVar(value=True)
+show_preview_var = tk.BooleanVar(value=False)
+preview_width_var = tk.StringVar(value="2")
 
 # Layout
 ttk.Label(root, text="Input Images:").grid(row=0, column=0, sticky="nw", padx=10, pady=10)
@@ -175,8 +179,15 @@ ttk.Button(root, text="Browse…", command=browse_output_file).grid(row=7, colum
 # Checkbox for inverting image (above Run Stitching button)
 ttk.Checkbutton(root, text="Invert image", variable=invert_var).grid(row=8, column=1, columnspan=2, sticky="w", padx=10, pady=5)
 
+# Checkbox for showing preview
+ttk.Checkbutton(root, text="Show Preview", variable=show_preview_var).grid(row=9, column=1, columnspan=2, sticky="w", padx=10, pady=5)
+
+# Preview Image Width input
+ttk.Label(root, text="Preview Image Width:").grid(row=10, column=0, sticky="e", padx=10, pady=10)
+ttk.Entry(root, textvariable=preview_width_var).grid(row=10, column=1, sticky="we", padx=10)
+
 run_button = ttk.Button(root, text="Run Stitching", command=start_stitching)
-run_button.grid(row=9, column=1, pady=20)
+run_button.grid(row=11, column=1, pady=20)
 
 # Make the listbox expand with the window
 root.columnconfigure(1, weight=1)
