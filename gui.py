@@ -138,7 +138,7 @@ downscaling_var  = tk.StringVar(value="8")
 contrast_var     = tk.StringVar(value="2.0")
 output_file_var  = tk.StringVar()
 downscaled_output_var = tk.StringVar()
-add_similar_var  = tk.BooleanVar(value=False)
+add_similar_var  = tk.BooleanVar(value=True)
 invert_var       = tk.BooleanVar(value=True)
 
 # Layout
